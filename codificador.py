@@ -87,37 +87,62 @@ class Codificar:
     def _embaralhar(self, texto):
         ret = ''
 
-        for t in texto:
-            ret += self._cifrar(t)
-
         caracteres = car.char
-        x = len(ret)
-        y = x - self.len_tail
-        cifra_alternada_str = ret[y:x]
+        cifra1 = ''
+        idx_tot = len(caracteres) - 1
+
+        ind_texto = 0
+        for t in texto:
+            idx_texto = caracteres.index( t )
+            len_embaralhar = len(texto) - self.len_tail
+
+            if ind_texto < len_embaralhar:      # não embaralha o final da string
+                if idx_texto == idx_tot:
+                    cifra1 += caracteres[0]
+                else:
+                    cifra1 += caracteres[idx_texto + 1]
+            else:
+                cifra1 += t
+
+            ind_texto += 1
         
+        print(f'01 = {cifra1}.')
+
+        cifra_alternada = self._cifra_alternada( texto )
+        idx_cifra = 0
+        ind_texto = 0
+        for c in cifra1:
+            idx_texto = caracteres.index( c )
+            len_embaralhar = len(texto) - self.len_tail
+
+            if ind_texto < len_embaralhar:      # não embaralha o final da string
+                x = cifra_alternada[ idx_cifra - 1]
+                proposta = idx_texto + x
+                if proposta > idx_tot:
+                    proposta = proposta - idx_tot
+                    proposta = proposta - 1     # converte em índice da lista
+                ret += caracteres[proposta]
+            else:
+                ret += c
+
+            ind_texto += 1
+            idx_cifra += 1
+            if idx_cifra > self.len_tail:
+                idx_cifra = 0
+
+        print(f'02 = {ret}.')
+        return ret
+
+    def _cifra_alternada(self, texto):
+        caracteres = car.char
+        x = len(texto)
+        y = x - self.len_tail
+        cifra_alternada_str = texto[y:x]
         cifra_alternada = []
         for s in cifra_alternada_str:
             cifra_alternada.append( caracteres.index(s) )
-
-        msg_embaralhada = ''
-        ind = 0
-        ind_len = 0
-        lst_ind = len(cifra_alternada)
-        len_txt_embaralhar = len(ret) - self.len_tail
-        for r in ret:
-            if ind_len < len_txt_embaralhar:                
-                msg_embaralhada += self._cifrar(r, cifra_alternada[ind])
-                ind += 1
-
-                if ind >= lst_ind:
-                    ind = 0
-            else:
-                msg_embaralhada += r
-
-            ind_len +=1
-
-        ret = msg_embaralhada
-        return ret
+        
+        return cifra_alternada
 
     def _cifrar(self, byte, par_cifra=0):
         ret = ''
@@ -153,35 +178,34 @@ class Codificar:
         return ret
 
     # ------
-    def _decifrar(self, byte, par_cif=0):
+    def _decifrar(self, texto):
         ret = ''
 
         caracteres = car.char
-        tot_idx_lista = len(caracteres) - 1
+        idx_tot = len(caracteres) - 1
+        total_lista = len(caracteres)
+        cifra_alternada = self._cifra_alternada( texto )
 
-        if par_cif == 0:
-            if byte in caracteres:
-                cif = self.cifra                
-                idx_byte = caracteres.index(byte)
+        idx_cifra = 0
+        decode1 = ''
+        for t in texto:
+            idx_t = caracteres.index( t )
+            x = cifra_alternada[ idx_cifra - 1 ]
+            proposta = idx_t - x
+            if proposta < 0:
+                proposta = proposta + total_lista
 
-                if idx_byte == tot_idx_lista:
-                    ret = caracteres[0]
-                else:
-                    ret = caracteres[idx_byte - cif]
-            else:
-                raise ValueError(f'2-Erro - [{byte}] não é previsto')
-        else:
-            if byte in caracteres:
-                idx_byte = caracteres.index(byte)
-                cif = 0
+            decode1 += caracteres[proposta]
+            
+            idx_cifra += 1
+            if idx_cifra > self.len_tail:
+                idx_cifra = 0
 
-                idx_decifrado = idx_byte - par_cif
-                if idx_decifrado < 0:
-                    idx_decifrado = idx_decifrado + tot_idx_lista
-                
-                ret = caracteres[idx_decifrado]                
-            else:
-                raise ValueError(f'2-Erro - [{byte}] não é previsto')
+        print(f'03 = {decode1};')
+
+        for d in decode1:
+            idx_d = caracteres.index( d )
+            ret += caracteres[ idx_d - 1 ]
 
         return ret
 
@@ -290,31 +314,13 @@ class Codificar:
         len_coded = len(self.pref1)
         len_texto = len(texto)
 
-        texto = texto[len_coded:len_texto]
+        msg = texto[ len_coded:len_texto ]
+        decode = self._decifrar( msg )
 
-        caracteres = car.char
+        len_tam_txt = len(str(self.limite_bytes))
+        len_msg = decode[ 0 : len_tam_txt ]
+        tam_msg = int(len_msg)
+        tam_msg_ate = len_tam_txt + tam_msg
 
-        x = len(texto)
-        y = x - self.len_tail
-        cifra_alternada_str = texto[y:x]
-        cifra_alternada = []
-        for s in cifra_alternada_str:
-            cifra_alternada.append( caracteres.index(s) )
-
-        ind = 0
-        msg_desembaralhada = ''
-        for t in texto:
-            msg_desembaralhada += self._decifrar(t, cifra_alternada[ind])
-            ind += 1
-            if ind >= self.len_tail:
-                ind = 0
-
-        for m in msg_desembaralhada:
-            ret += self._decifrar(m)
-
-        x = len(str(self.limite_bytes))
-        len_msg = int(ret[0:x])
-        ret = ret[x:len_msg + x]
-
-        self.decodificado = ret
+        ret = decode[ len_tam_txt : tam_msg_ate ]
         return ret
