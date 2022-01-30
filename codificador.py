@@ -5,24 +5,25 @@ import random
 import os
 import caracteres as car
 
-
 CURR_DIR = os.path.dirname(os.path.realpath(__name__))
 
 class Codificar:
 
-    cifra = 1
+    #cifra = 1
     buffer = 100
     buffer_min = 0.5
     limite_bytes = 999000
     pref1 = 'coded='
     len_tail = 10
 
+    # ------------------------------------------------------------------
     def __init__(self, msg_entrada=None):
         self.__msg_entrada = msg_entrada
         self.__len_original = None
         self.__msg_codificada = None
         self.__msg_decodificada = None
 
+    # ------------------------------------------------------------------
     def __repr__(self):
         ret = ''
 
@@ -40,20 +41,15 @@ class Codificar:
             len_codificado = len(self.codificado)
 
         ret = (
-            f'\n\n...> Entrada.......: [{self.entrada}]'
-            f' - len:{len_entrada}'
-
-            f'\n\n...> Decodificado..: [{self.decodificado}]'
-            f' - len:{len_decodificado}'
-
-            f'\n\n...> Codificado....: [{self.codificado}]'
-            f' - len:{len_codificado}'
-
-            f'\n\n...> Validade......: [{self.valido}]\n'
+            f'\n...> Entrada.......: [{self.entrada}] - len:{len_entrada}'
+            f'\n...> Decodificado..: [{self.decodificado}] - len:{len_decodificado}'
+            f'\n...> Codificado....: [{self.codificado}] - len:{len_codificado}'
+            f'\n...> Validade......: [{self.valido}]\n'
         )
 
         return ret
     
+    # ------------------------------------------------------------------
     @property
     def entrada(self):
         return self.__msg_entrada
@@ -70,6 +66,7 @@ class Codificar:
             ret = True
         return ret
 
+    # ------------------------------------------------------------------
     @entrada.setter
     def entrada(self, valor):
         self.__msg_entrada = valor
@@ -83,7 +80,83 @@ class Codificar:
         self.__msg_decodificada = valor
 
 
-    # ------------------------------------------------------------------
+    """
+    --------------------------------------------------------------------------------
+
+        Abaixo são os métodos principais que gerenciam todo o processo de 
+        embaralhamento e desembaralhamento do texto enviado a eles.
+
+    --------------------------------------------------------------------------------
+    """
+    def criptografar(self, texto):
+        ret = ''
+        self.entrada = texto
+
+        if self._validar_texto(texto) != True:
+            raise ValueError(self._validar_texto(texto))
+
+        buffer = self._calc_buffer(texto)
+        pref2 = self._len_msg_str(texto)
+        texto = f'{pref2}{texto}'        
+        texto = self._add_buffer(texto, buffer - len(str(self.limite_bytes)) )
+        ret = self._embaralhar(texto)        
+        ret = f'{self.pref1}{ret}'
+
+        self.codificado = ret
+        self.decodificado = self.decriptografar(self.codificado)
+
+        if not self.valido:
+            raise ValueError('Não foi possível garantir a integridade da mensagem')
+
+        return ret
+
+
+    def decriptografar(self, texto):
+        ret = ''
+
+        if self.codificado == None:
+            self.codificado = texto
+
+        msg = self._remove_coded( texto )
+        decode = self._decifrar( msg )
+
+        len_tam_txt = len(str(self.limite_bytes))
+        len_msg = decode[ 0 : len_tam_txt ]
+        tam_msg = int(len_msg)
+        tam_msg_ate = len_tam_txt + tam_msg
+
+        ret = decode[ len_tam_txt : tam_msg_ate ]
+        self.decodificado = ret
+        return ret
+
+
+    """
+    --------------------------------------------------------------------------------
+
+        Abaixo são os métodos auxiliares que realizam as operações de
+        forma individual, cada um com seu propósito.
+
+    --------------------------------------------------------------------------------
+    """
+    def _validar_texto(self, texto):
+        ret = True
+
+        tp = type(texto)
+        if tp != str:
+            ret = 'O formato de entrada precisa ser string!'
+
+        if (texto == None) or (texto == 0):
+            ret = 'Texto para codificação não pode ser vazio'
+
+        if texto[0:6] == self.pref1:
+            ret = 'Texto já codificado, use a função decriptografar'
+        
+        if len(texto) > self.limite_bytes:
+            ret = f'Limite de {self.limite_bytes} bytes'
+
+        return ret
+
+
     def _embaralhar(self, texto):
         ret = ''
 
@@ -105,8 +178,6 @@ class Codificar:
                 cifra1 += t
 
             ind_texto += 1
-        
-        print(f'01 = {cifra1}.')
 
         cifra_alternada = self._cifra_alternada( texto )
         idx_cifra = 0
@@ -130,54 +201,9 @@ class Codificar:
             if idx_cifra > self.len_tail:
                 idx_cifra = 0
 
-        print(f'02 = {ret}.')
         return ret
 
-    def _cifra_alternada(self, texto):
-        caracteres = car.char
-        x = len(texto)
-        y = x - self.len_tail
-        cifra_alternada_str = texto[y:x]
-        cifra_alternada = []
-        for s in cifra_alternada_str:
-            cifra_alternada.append( caracteres.index(s) )
-        
-        return cifra_alternada
 
-    def _cifrar(self, byte, par_cifra=0):
-        ret = ''
-
-        caracteres = car.char
-        tot_idx_lista = len(caracteres) - 1
-
-        if par_cifra == 0:
-
-            if byte in caracteres:
-                cif = self.cifra                
-                idx_byte = caracteres.index(byte)
-
-                if idx_byte == tot_idx_lista:
-                    ret = caracteres[0]
-                else:
-                    ret = caracteres[idx_byte + cif]
-            else:
-                raise ValueError(f'Símbolo [{byte}] não previsto')
-        else:
-            if byte in caracteres:
-                idx_byte = caracteres.index(byte)
-                cif = 0
-
-                idx_cifrado = idx_byte + par_cifra
-                if idx_cifrado > tot_idx_lista:
-                    idx_cifrado = idx_cifrado - tot_idx_lista
-
-                ret = caracteres[idx_cifrado]
-            else:
-                raise ValueError(f'2-Símbolo [{byte}] não previsto')
-
-        return ret
-
-    # ------
     def _decifrar(self, texto):
         ret = ''
 
@@ -201,15 +227,25 @@ class Codificar:
             if idx_cifra > self.len_tail:
                 idx_cifra = 0
 
-        print(f'03 = {decode1};')
-
         for d in decode1:
             idx_d = caracteres.index( d )
             ret += caracteres[ idx_d - 1 ]
 
         return ret
 
-    # ------
+
+    def _cifra_alternada(self, texto):
+        caracteres = car.char
+        x = len(texto)
+        y = x - self.len_tail
+        cifra_alternada_str = texto[y:x]
+        cifra_alternada = []
+        for s in cifra_alternada_str:
+            cifra_alternada.append( caracteres.index(s) )
+        
+        return cifra_alternada
+
+
     def _calc_buffer(self, texto):
         ret = ''
 
@@ -226,7 +262,7 @@ class Codificar:
 
         return ret
 
-    # ------
+
     def _add_buffer(self, texto, buffer):
         ret = ''
 
@@ -242,7 +278,7 @@ class Codificar:
 
         return ret
 
-    # ------
+
     def _len_msg_str(self, msg):
         ret = ''
 
@@ -252,75 +288,13 @@ class Codificar:
 
         return ret
 
-    # ------
-    """
-    def _len_msg(self, msg):
-        ret = ''
 
-        ini = len(self.pref1)
-        fim = ini + len(str(self.limite_bytes))
-        text = str(msg[ini : fim]) 
-        text_decifrado = ''
+    def _remove_coded(self, txt):
+        ret = txt
 
-        for t in text:
-            text_decifrado += self._decifrar(t)        
-        
-        ret = int(text_decifrado)
-        return ret
-    """
+        if txt[0:6] == self.pref1:
+            len_coded = len(self.pref1)
+            len_texto = len(txt)
+            ret = txt[ len_coded:len_texto ]
 
-    # ------------------------------------------------------------------
-    def validar_texto(self, texto):
-        ret = True
-
-        if (texto == None) or (texto == 0):
-            ret = 'Texto para codificação não pode ser vazio'
-
-        if texto[0:6] == self.pref1:
-            ret = 'Texto já codificado, use a função decriptografar'
-        
-        if len(texto) > self.limite_bytes:
-            ret = f'Limite de {self.limite_bytes} bytes'
-
-        return ret
-
-
-    def criptografar(self, texto):
-        ret = ''
-        self.entrada = texto
-
-        if self.validar_texto(texto) != True:
-            raise ValueError(self.validar_texto(texto))
-
-        buffer = self._calc_buffer(texto)
-        pref2 = self._len_msg_str(texto)
-        texto = f'{pref2}{texto}'        
-        texto = self._add_buffer(texto, buffer - len(str(self.limite_bytes)) )
-        ret = self._embaralhar(texto)        
-        ret = f'{self.pref1}{ret}'
-
-        self.codificado = ret
-        self.decodificado = self.decriptografar(self.codificado)
-        """
-        if not self.valido:
-            raise ValueError('Não foi possível garantir a integridade da mensagem')
-        """
-
-        return ret
-
-    
-    def decriptografar(self, texto):
-        ret = ''
-        len_coded = len(self.pref1)
-        len_texto = len(texto)
-
-        msg = texto[ len_coded:len_texto ]
-        decode = self._decifrar( msg )
-
-        len_tam_txt = len(str(self.limite_bytes))
-        len_msg = decode[ 0 : len_tam_txt ]
-        tam_msg = int(len_msg)
-        tam_msg_ate = len_tam_txt + tam_msg
-
-        ret = decode[ len_tam_txt : tam_msg_ate ]
         return ret
