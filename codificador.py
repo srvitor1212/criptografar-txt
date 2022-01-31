@@ -10,8 +10,8 @@ CURR_DIR = os.path.dirname(os.path.realpath(__name__))
 class Codificar:
 
     #cifra = 1
-    buffer = 100
-    buffer_min = 0.5
+    buffer = 50 #todo: da pra melhorar e deixa isso daqui mais dinâmico
+    #buffer_min = 0.5
     limite_bytes = 999000
     pref1 = 'coded='
     len_tail = 10
@@ -247,23 +247,29 @@ class Codificar:
 
 
     def _calc_buffer(self, texto):
+        """
+            Calcula o tamanho que o texto criptografado deve ter
+            de acordo com a variável self.buffer.
+        """
         ret = ''
 
         len_txt = len(texto)
         y = len_txt / self.buffer
+        y = math.ceil(y) # arredonda sempra para cima
+        res = (y * self.buffer)
 
-        if y < self.buffer_min:
-            res = self.buffer
-        else:
-            y = math.ceil(y) # arredonda sempra para cima
-            res = (y * self.buffer)
-        
         ret = res + self.buffer
-
         return ret
 
 
     def _add_buffer(self, texto, buffer):
+        """
+            Retorna o centudo do texto + caracteres aleatórios
+            A quantidade total do retorno é definida de acordo com buffer 
+            que deve ser passado na função
+
+            Os caracteres respeitão a lista em caracteres.py
+        """
         ret = ''
 
         caracteres = car.char
@@ -280,6 +286,9 @@ class Codificar:
 
 
     def _len_msg_str(self, msg):
+        """
+            Restorna o length da msg em um string de 6 posições
+        """
         ret = ''
 
         x = len(str(self.limite_bytes))
@@ -290,6 +299,10 @@ class Codificar:
 
 
     def _remove_coded(self, txt):
+        """
+            Recebe um string exemplo: coded=meu nome é vitor
+            E retorna o string sem o coded, exemplo: meu nome é vitor
+        """
         ret = txt
 
         if txt[0:6] == self.pref1:

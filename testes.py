@@ -7,50 +7,66 @@ from codificador import Codificar
 
 class CodificadorTestes(unittest.TestCase):
 
+    def test_remove_coded(self):
+        obj = Codificar()
+        
+        txt = 'coded=uma string'
+        self.assertEqual(
+            obj._remove_coded(txt),
+            'uma string'
+        )
+
+        txt = 'xcoded=uma string'
+        self.assertEqual(
+            obj._remove_coded(txt),
+            'xcoded=uma string'
+        )
+
+
     def test_len_msg_str(self):
         obj = Codificar()
+
+        txt = 'vitor'
         self.assertEqual(
-            obj._len_msg_str('Mensagem'),
-            '000008'
+            obj._len_msg_str(txt),
+            '000005'
         )
 
-    def test_len_msg(self):
+
+    def test_add_buffer(self):
         obj = Codificar()
+
+        txt = 'Teste buffer'
         self.assertEqual(
-            obj._len_msg('coded=222333kkklll'),
-            111222
+            obj._add_buffer(txt, 12),
+            'Teste buffer'
         )
 
-    def test_entrada(self):
-        text = 'Um mensagem qualquer! '
-        obj = Codificar(text)
+        txt = 'Teste buffer'
+        len_txt = len(obj._add_buffer( txt, 20 ) )
         self.assertEqual(
-            obj.entrada,
-            text
+            len( obj._add_buffer( txt, 20 ) ),
+            20
         )
 
-    def test_saida(self):
-        text = 'Um mensagem qualquer! '
-        obj = Codificar(text)
-        self.assertNotEqual(
-            obj.criptografar(text),
-            text
+    
+    def test_calc_buffer(self):
+        obj = Codificar()
+
+        txt = '010_xxxxxx'
+        self.assertEqual(
+            obj._calc_buffer( txt ),
+            obj.buffer * 2
         )
 
-    def test_descriptografar(self):
-        text = 'Um mensagem qualquer! '
-        obj = Codificar(text)
-        obj.criptografar(text)
+        txt = '200_xxxxxx123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890200_xxxxxx123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890'
         self.assertEqual(
-            obj.decriptografar(obj.codificado),
-            text
+            obj._calc_buffer( txt ),
+            200 + obj.buffer
         )
+
 
 
 if __name__ == '__main__':
     print(f'\n' * 10)
-    unittest.main()
-
-
-def teste_completo():
     unittest.main()
