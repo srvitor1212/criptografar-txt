@@ -7,6 +7,7 @@ from codificador import Codificar
 
 class CodificadorTestes(unittest.TestCase):
 
+
     def test_remove_coded(self):
         obj = Codificar()
         
@@ -43,7 +44,6 @@ class CodificadorTestes(unittest.TestCase):
         )
 
         txt = 'Teste buffer'
-        len_txt = len(obj._add_buffer( txt, 20 ) )
         self.assertEqual(
             len( obj._add_buffer( txt, 20 ) ),
             20
@@ -66,7 +66,49 @@ class CodificadorTestes(unittest.TestCase):
         )
 
 
+    def test_cifra_alternada(self):
+        obj = Codificar()
+
+        txt = '1234567890'
+        self.assertEqual(
+            obj._cifra_alternada( txt ),
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+        )
+
+        txt = "texto qualquer }| é,.!'()"
+        self.assertEqual(
+            obj._cifra_alternada( txt ),
+            [75, 76, 77, 78, 79, 80, 81, 82, 83, 84]
+        )
+
+
+    """
+
+        Teste dos dois métodos principais do programa
+        
+    """
+    cript_decrip_entrada = "}| é,.!'() texto para criptografar }| é,.!'()"
+    cript_decrip_obj = Codificar()        
+    cript_decrip_obj.criptografar(cript_decrip_entrada)
+    cript_decrip_processado = cript_decrip_obj.decodificado
+
+    def test_criptografar(self):
+        self.assertEqual(
+            self.cript_decrip_processado,
+            self.cript_decrip_entrada
+        )
+
+
+    def test_decriptografar(self):
+        obj = Codificar()
+
+        self.assertEqual(
+            obj.decriptografar(self.cript_decrip_obj.codificado),
+            self.cript_decrip_entrada
+        )
+
 
 if __name__ == '__main__':
     print(f'\n' * 10)
+    print(f'*** Iniciando testes ***\n')
     unittest.main()

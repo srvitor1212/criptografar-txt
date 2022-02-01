@@ -9,9 +9,8 @@ CURR_DIR = os.path.dirname(os.path.realpath(__name__))
 
 class Codificar:
 
-    #cifra = 1
-    buffer = 50 #todo: da pra melhorar e deixa isso daqui mais dinâmico
-    #buffer_min = 0.5
+    buffer = 50 #todo: da pra melhorar e deixa isso daqui mais dinâmico. Ver qual é o minímo e máximo e porquê...
+                #todo provavelmente interage com len_tail
     limite_bytes = 999000
     pref1 = 'coded='
     len_tail = 10
@@ -89,6 +88,9 @@ class Codificar:
     --------------------------------------------------------------------------------
     """
     def criptografar(self, texto):
+        """
+            Criptografa o texto de entrada
+        """
         ret = ''
         self.entrada = texto
 
@@ -99,9 +101,10 @@ class Codificar:
         pref2 = self._len_msg_str(texto)
         texto = f'{pref2}{texto}'        
         texto = self._add_buffer(texto, buffer - len(str(self.limite_bytes)) )
-        ret = self._embaralhar(texto)        
-        ret = f'{self.pref1}{ret}'
 
+        ret = self._embaralhar(texto)
+
+        ret = f'{self.pref1}{ret}'
         self.codificado = ret
         self.decodificado = self.decriptografar(self.codificado)
 
@@ -112,12 +115,16 @@ class Codificar:
 
 
     def decriptografar(self, texto):
+        """
+            Decriptografa o texto de entrada
+        """
         ret = ''
 
         if self.codificado == None:
             self.codificado = texto
 
         msg = self._remove_coded( texto )
+
         decode = self._decifrar( msg )
 
         len_tam_txt = len(str(self.limite_bytes))
@@ -139,6 +146,9 @@ class Codificar:
     --------------------------------------------------------------------------------
     """
     def _validar_texto(self, texto):
+        """
+            Faz check da entrada de texto e estabelce padrões
+        """
         ret = True
 
         tp = type(texto)
@@ -158,6 +168,9 @@ class Codificar:
 
 
     def _embaralhar(self, texto):
+        """
+            Método principal de cirptografia do texto
+        """
         ret = ''
 
         caracteres = car.char
@@ -205,6 +218,9 @@ class Codificar:
 
 
     def _decifrar(self, texto):
+        """
+            Método principal para decirptograr texto
+        """
         ret = ''
 
         caracteres = car.char
@@ -235,6 +251,14 @@ class Codificar:
 
 
     def _cifra_alternada(self, texto):
+        """
+            Pega os últimos caracteres do texto de acordo com len_tail
+            para usar como cifra alternada.
+            Baseado nesses caracteres, pega o indice deles de caracteres.py
+            para usar na cifra depois.
+
+            Restorna uma lista
+        """
         caracteres = car.char
         x = len(texto)
         y = x - self.len_tail
