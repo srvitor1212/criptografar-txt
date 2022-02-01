@@ -219,7 +219,7 @@ class Codificar:
 
     def _decifrar(self, texto):
         """
-            Método principal para decirptograr texto
+            Método principal para decriptografar texto
         """
         ret = ''
 
