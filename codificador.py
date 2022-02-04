@@ -9,8 +9,7 @@ CURR_DIR = os.path.dirname(os.path.realpath(__name__))
 
 class Codificar:
 
-    buffer = 50 #todo: da pra melhorar e deixa isso daqui mais dinâmico. Ver qual é o minímo e máximo e porquê...
-                #todo provavelmente interage com len_tail
+    buffer = 50
     limite_bytes = 999000
     pref1 = 'coded='
     len_tail = 10
@@ -99,8 +98,8 @@ class Codificar:
 
         buffer = self._calc_buffer(texto)
         pref2 = self._len_msg_str(texto)
-        texto = f'{pref2}{texto}'        
-        texto = self._add_buffer(texto, buffer - len(str(self.limite_bytes)) )
+        texto = f'{pref2}{texto}'
+        texto = self._add_buffer(texto, buffer)
 
         ret = self._embaralhar(texto)
 
@@ -163,6 +162,9 @@ class Codificar:
         
         if len(texto) > self.limite_bytes:
             ret = f'Limite de {self.limite_bytes} bytes'
+
+        if self.buffer <= 30:
+            ret = f'O buffer precisa ser maior que 30'
 
         return ret
 
@@ -298,9 +300,9 @@ class Codificar:
 
         caracteres = car.char
         len_texto = len(texto)
+        idx_caracteres = len(caracteres) - 1
         for i in range(buffer):
             if i >= len_texto:
-                idx_caracteres = len(caracteres) - 1
                 sorteio = random.randint(0, idx_caracteres)
                 ret += caracteres[sorteio]
             else:
