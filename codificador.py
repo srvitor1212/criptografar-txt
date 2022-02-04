@@ -37,13 +37,22 @@ class Codificar:
 
         if self.codificado != None:
             len_codificado = len(self.codificado)
-
-        ret = (
-            f'\n...> Entrada.......: [{self.entrada}] - len:{len_entrada}'
-            f'\n...> Decodificado..: [{self.decodificado}] - len:{len_decodificado}'
-            f'\n...> Codificado....: [{self.codificado}] - len:{len_codificado}'
-            f'\n...> Validade......: [{self.valido}]\n'
-        )
+        
+        if len_entrada < 1000:
+            ret = (
+                f'\n...> Entrada.......: [{self.entrada}] - len:{len_entrada}'
+                f'\n...> Decodificado..: [{self.decodificado}] - len:{len_decodificado}'
+                f'\n...> Codificado....: [{self.codificado}] - len:{len_codificado}'
+                f'\n...> Validade......: [{self.valido}]\n'
+            )
+        else:
+            ret = (
+                f'\n...> Representação reduzida <...'
+                f'\n...> Entrada.......: [{self.entrada[0:1000]} ...] - len:{len_entrada}'
+                f'\n...> Decodificado..: [{self.decodificado[0:1000]} ...] - len:{len_decodificado}'
+                f'\n...> Codificado....: [{self.codificado[0:1000]} ...] - len:{len_codificado}'
+                f'\n...> Validade......: [{self.valido}]\n'
+            )
 
         return ret
     
@@ -161,7 +170,7 @@ class Codificar:
             ret = 'Texto já codificado, use a função decriptografar'
         
         if len(texto) > self.limite_bytes:
-            ret = f'Limite de {self.limite_bytes} bytes'
+            ret = f'Limite de {self.limite_bytes} bytes. Foram enviados: {len(texto)}'
 
         if self.buffer <= 30:
             ret = f'O buffer precisa ser maior que 30'
@@ -181,40 +190,47 @@ class Codificar:
 
         ind_texto = 0
         for t in texto:
-            idx_texto = caracteres.index( t )
-            len_embaralhar = len(texto) - self.len_tail
+            if t in caracteres:
+                idx_texto = caracteres.index( t )
+                len_embaralhar = len(texto) - self.len_tail
 
-            if ind_texto < len_embaralhar:      # não embaralha o final da string
-                if idx_texto == idx_tot:
-                    cifra1 += caracteres[0]
+                if ind_texto < len_embaralhar:      # não embaralha o final da string
+                    if idx_texto == idx_tot:
+                        cifra1 += caracteres[0]
+                    else:
+                        cifra1 += caracteres[idx_texto + 1]
                 else:
-                    cifra1 += caracteres[idx_texto + 1]
-            else:
-                cifra1 += t
+                    cifra1 += t
 
-            ind_texto += 1
+                ind_texto += 1
+            else:
+                raise ValueError(f'Símbolo não previsto: {t}')
+
 
         cifra_alternada = self._cifra_alternada( texto )
         idx_cifra = 0
         ind_texto = 0
         for c in cifra1:
-            idx_texto = caracteres.index( c )
-            len_embaralhar = len(texto) - self.len_tail
+            if c in caracteres:
+                idx_texto = caracteres.index( c )
+                len_embaralhar = len(texto) - self.len_tail
 
-            if ind_texto < len_embaralhar:      # não embaralha o final da string
-                x = cifra_alternada[ idx_cifra - 1]
-                proposta = idx_texto + x
-                if proposta > idx_tot:
-                    proposta = proposta - idx_tot
-                    proposta = proposta - 1     # converte em índice da lista
-                ret += caracteres[proposta]
+                if ind_texto < len_embaralhar:      # não embaralha o final da string
+                    x = cifra_alternada[ idx_cifra - 1]
+                    proposta = idx_texto + x
+                    if proposta > idx_tot:
+                        proposta = proposta - idx_tot
+                        proposta = proposta - 1     # converte em índice da lista
+                    ret += caracteres[proposta]
+                else:
+                    ret += c
+
+                ind_texto += 1
+                idx_cifra += 1
+                if idx_cifra > self.len_tail:
+                    idx_cifra = 0
             else:
-                ret += c
-
-            ind_texto += 1
-            idx_cifra += 1
-            if idx_cifra > self.len_tail:
-                idx_cifra = 0
+                raise ValueError(f'Símbolo não previsto: {c}')
 
         return ret
 
@@ -233,21 +249,27 @@ class Codificar:
         idx_cifra = 0
         decode1 = ''
         for t in texto:
-            idx_t = caracteres.index( t )
-            x = cifra_alternada[ idx_cifra - 1 ]
-            proposta = idx_t - x
-            if proposta < 0:
-                proposta = proposta + total_lista
+            if t in caracteres:
+                idx_t = caracteres.index( t )
+                x = cifra_alternada[ idx_cifra - 1 ]
+                proposta = idx_t - x
+                if proposta < 0:
+                    proposta = proposta + total_lista
 
-            decode1 += caracteres[proposta]
-            
-            idx_cifra += 1
-            if idx_cifra > self.len_tail:
-                idx_cifra = 0
+                decode1 += caracteres[proposta]
+
+                idx_cifra += 1
+                if idx_cifra > self.len_tail:
+                    idx_cifra = 0
+            else:
+                raise ValueError(f'Símbolo não previsto: {t}')
 
         for d in decode1:
-            idx_d = caracteres.index( d )
-            ret += caracteres[ idx_d - 1 ]
+            if d in caracteres:
+                idx_d = caracteres.index( d )
+                ret += caracteres[ idx_d - 1 ]
+            else:
+                raise ValueError(f'Símbolo não previsto: {d}')
 
         return ret
 
