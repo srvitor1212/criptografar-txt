@@ -87,25 +87,26 @@ class CodificadorTestes(unittest.TestCase):
         Teste dos dois métodos principais do programa
         
     """
-    cript_decrip_entrada = "}| é,.!'() texto para criptografar }| é,.!'()"
-    cript_decrip_obj = Codificar()        
-    cript_decrip_obj.criptografar(cript_decrip_entrada)
-    cript_decrip_processado = cript_decrip_obj.decodificado
+    def test_metodos_principais(self):
+        cript_decrip_entrada = "}| é,.!'() texto para criptografar }| é,.!'()"
+        cript_decrip_obj = Codificar()        
+        cript_decrip_obj.criptografar(cript_decrip_entrada)
+        cript_decrip_processado = cript_decrip_obj.decodificado
 
-    def test_criptografar(self):
-        self.assertEqual(
-            self.cript_decrip_processado,
-            self.cript_decrip_entrada
-        )
+        def test_criptografar(self):
+            self.assertEqual(
+                self.cript_decrip_processado,
+                self.cript_decrip_entrada
+            )
 
 
-    def test_decriptografar(self):
-        obj = Codificar()
+        def test_decriptografar(self):
+            obj = Codificar()
 
-        self.assertEqual(
-            obj.decriptografar(self.cript_decrip_obj.codificado),
-            self.cript_decrip_entrada
-        )
+            self.assertEqual(
+                obj.decriptografar(self.cript_decrip_obj.codificado),
+                self.cript_decrip_entrada
+            )
 
 
 if __name__ == '__main__':
